@@ -51,17 +51,3 @@ for(district in list_of_districts$District_name){
 
 }
 ```
-```{r}
-for ( province in list_of_provinces){
-  
-  list_of_districts <- districts |> 
-    filter(province == province)
-  
-  for (district in list_of_districts){
-    knit_child("./template.Rmd")
-  }
-  
-}
-```
-
-
