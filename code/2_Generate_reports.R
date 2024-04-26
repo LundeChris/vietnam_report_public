@@ -31,6 +31,9 @@ for (i in list_of_districts$District_name){
                     clean = TRUE,
                     quiet = TRUE)
   
+  # Delete log file
+  file.remove(str_c("./code/", i, ".log"))
+  
   cat("Finished printing report", counter, "of", nrow(list_of_districts))
   cat("\n")
 }
