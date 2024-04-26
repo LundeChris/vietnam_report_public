@@ -1,0 +1,54 @@
+%% load packages
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{eso-pic}
+\usepackage{fancyhdr}
+\usepackage{fontspec}
+\usepackage{sectsty}
+\usepackage{titlesec}
+\usepackage{pdflscape}
+
+
+
+%% Setting fonts
+\setmainfont{Calibri}
+
+%% Set page size with a wider right margin
+\geometry{a4paper, left=4cm, top=1cm, bottom=1cm, right=2cm}
+
+%% Let's define some colours
+\definecolor{sidebarcolor}{HTML}{01163D}
+
+%%Add side bar
+\AddToShipoutPicture{% 
+    \AtPageLowerLeft{% 
+        \put(0,0){%  % Adjusted to start from the left side
+            \color{sidebarcolor}\rule{2.5cm}{\LenToUnit\paperheight}% Border width remains the same
+          }%
+     }%
+    % logo
+     \AtPageLowerLeft{% start the bar at the bottom left of the page
+     \put(0.49cm,27.2cm){% move it to the top left corner
+         \includegraphics[width=1.5cm]{./gso_logo.png} % Adjusted position for top left corner
+       }%
+  }%
+}
+
+%%Distance from footer to text
+\setlength{\footskip}{20pt}
+
+%% style the chapter/section fonts
+\titleformat{\subsection}
+  {\fontsize{16}{18}\bfseries}{\thesection}{1em}{}[{\titlerule[0.8pt]}]
+  
+% left align title
+\makeatletter
+\renewcommand{\maketitle}{\bgroup\setlength{\parindent}{0pt}
+\begin{flushleft}
+  {\fontsize{20}{18}\textbf{\MakeUppercase{\@title}}} \vspace{0.01cm} 
+\end{flushleft}\egroup
+}
+\makeatother
+
+
+\pagestyle{empty} %removes pagenumber

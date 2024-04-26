@@ -1,0 +1,125 @@
+---
+title: "Differences between R Markdown and Latex"
+output:
+ pdf_document:
+  latex_engine: xelatex
+  extra_dependencies:
+    float: null
+    eso-pic: null
+    lipsum: null  
+    fontspec: null
+    hhline: null
+    colortbl: null
+    tabularx: null
+    xcolor: null
+    tikz: null
+    booktabs: null
+documentclass: article
+---
+
+
+\section{This is a section using LateX}
+Section content...
+
+\subsection{This is a subsection using LateX}
+Subsection content...
+
+\subsubsection{This is a subsubsection using LateX}
+Subsubsection content...
+
+
+\subsubsection{Font-features using LateX}
+
+This is some \textbf{bold} and \textit{italicized} and \underline{underlined} text.\newline
+This is both, \underline{\textbf{\textit{bold and italicized and underlined}}} text.
+
+
+\subsubsection{Bullets using LateX}
+
+\begin{itemize}  
+  \item item 1
+  \item item 2
+  \item item 3
+\end{itemize}
+
+or
+
+\begin{enumerate}  
+  \item item 1
+  \item item 2
+  \item item 3
+\end{enumerate}
+
+\subsubsection{Tables using LateX}
+
+\begin{tabular}{ l l }
+  Column 1  & Column 2  \\\hline
+  row 1     &  entry 1  \\
+  row 2     &  entry 2  \\
+  row 3     &  entry 3  \\
+\end{tabular}
+
+\subsubsection{Line breaks using LateX}
+ 
+Some text in line 1 \newline
+Some text in line 2 \newline
+Some text in line 3
+
+\subsubsection{Adding a picture using LateX}
+
+\begin{figure}[h]
+ \centering
+  \includegraphics[width=.25\textwidth]{./gso_logo.png}
+  \caption{Your caption here.}
+\end{figure}
+\newpage
+
+# This is a section using R Markdown
+Section content...
+
+## This is a subsection using R Markdown
+subsection content...
+
+### This is a subsubsection using R Markdown
+Subsubsection content...
+
+### Font-feature using using R Markdown
+
+This is some **bold** and _italicized_  text.
+
+This is both, **_bold and italicized_** text.
+
+
+### Bullets using R Markdown
+
+* item 1
+* item 2
+* item 3
+
+or
+
+1. item 1
+2. item 2
+3. item 3
+
+### Tables using R Markdown
+
+| Column 1  | Column 2 |
+| --------- | -------- |
+| row 1     |  entry 1 |
+| row 2     |  entry 2 |
+| row 3     |  entry 3 |
+
+### Line breaks using R Markdown
+
+Some text in line 1   
+ 
+Some text in line 2  
+
+Some text in line 3  
+\newpage
+
+### Adding a picture using R Markdown
+<center> 
+![Add caption here](gso_logo.png)
+</center> 

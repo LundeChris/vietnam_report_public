@@ -1,0 +1,67 @@
+---
+title: 'Business Landscape Insights'
+output:
+  pdf_document:
+    latex_engine: xelatex
+    includes:
+      in_header: PrettyPDF.tex
+documentclass: article
+---
+<!-- sets fontsize -->
+\fontsize{12pt}{14pt}\selectfont
+
+```{r input, echo = FALSE, include = FALSE}
+library(ggplot2)
+library(tidyverse)
+library(stringr)
+library(knitr)
+library(sf)
+library(rmapshaper)
+
+# To handle Vietnamese characters in graphs we set the following chunk options.
+knitr::opts_chunk$set(dev = "png", dpi = 200)
+
+# Read list of districts
+list_of_districts <- readRDS("./tidy_data/data_to_figure.rds") |> 
+  distinct(Province, District_name) |> 
+  sample_n(2) # For testing, sample 2 districts at random
+```
+
+
+```{r, echo = FALSE, results='asis', error = TRUE}
+
+# Read input data
+input <- readRDS("./tidy_data/data_to_figure_workshop.rds") |> 
+  rename(Tên_sản_phẩm = `Tên sản phẩm`)
+
+# Loop
+for(district in list_of_districts$District_name){
+  
+  # Filter input data to current districts 
+  data_to_figure = input |> 
+    filter(District_name == district)
+  
+  params = list(district = district)
+  
+  cat("\\section{", district, "}")
+  
+  cat(knit_child("./code/long_report/long_report_template_workshop.Rmd", quiet = TRUE))
+  
+  cat("\\newpage")
+
+}
+```
+```{r}
+for ( province in list_of_provinces){
+  
+  list_of_districts <- districts |> 
+    filter(province == province)
+  
+  for (district in list_of_districts){
+    knit_child("./template.Rmd")
+  }
+  
+}
+```
+
+

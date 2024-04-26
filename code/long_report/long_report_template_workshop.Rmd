@@ -1,0 +1,293 @@
+
+```{r, echo=FALSE}
+# Prepare data for figure 1 and accompanying text
+
+#Step 1: Filter so unknown values are not included in figures, prim_prod5_c!="Unknown product"
+
+#step 2: Group by production code
+#Step 3: Summarise, divide profit-variable with 1000000000, sum_profit = sum(profit-variable / 1000000000)
+#Step 4: Write ungroup(), so variables are no longer grouped
+#Step 5: Mutate - create rank-variable using row_number(desc(profit-variable))
+#Step 6: Filter on rank<=10
+
+data_1 <- data_to_figure |> 
+  # Remove unkown production codes
+  filter(!is.na(Tên_sản_phẩm)) |> 
+  # Group by production code
+  group_by(Tên_sản_phẩm) |>
+  # Summarise to sum profit by production
+  summarise(sum_profit = sum(profit / 1000000)) |> 
+  ungroup() |> 
+  # Create new variable 'rank' based on profit
+  mutate(rank = row_number(desc(sum_profit))) |> 
+  arrange(rank) |> 
+  # Filter to 10 largest industries by profit
+  filter(rank <= 10) 
+
+```
+
+```{r, warning=FALSE, echo=FALSE, include=FALSE}
+# Prepare data for figure 2 and accompanying text
+
+#Step 1: Filter so unknown values are not included in figures, prim_prod5_c!="Unknown product"
+#step 2: Group by production code
+#Step 3: Mutate, divide profit-variable with 1000000000, sum_profit = sum(profit-variable / 1.000000000)
+#Step 4: Write ungroup(), so variables are no longer grouped
+#Step 5: Mutate - create rank-variable using row_number(desc(profit-variable))
+#Step 6: Filter on rank<=10
+#step 7: Group by production code again
+#step 8 summarise each emplyment variable like sum_employ_end = sum(no_employ_end)
+#step 9 make long data using pivot_longer
+#step 10 make labels for each employment variables using ifelse()
+
+data_2 <- data_to_figure |>
+  filter(!is.na(Tên_sản_phẩm)) |>  #1
+  group_by(Tên_sản_phẩm) |> #2
+  mutate(sum_profit = sum(profit) / 1000) |> #3
+  ungroup() |> #4
+  mutate(rank = dense_rank(desc(sum_profit))) |> #5
+  filter(rank <= 10) |> #6
+  group_by(Tên_sản_phẩm, rank) |> #7
+  summarise(sum_total = sum(n_employee),
+            sum_female = sum(n_female_employee),
+            sum_nonpaid = sum(n_nonpaid_employee),
+            sum_ss = sum(n_employee_ss)) |> #8
+  pivot_longer(cols = c(sum_total, 
+                        sum_female, 
+                        sum_nonpaid, 
+                        sum_ss), #9
+               names_to = "employee_type",
+               values_to = "n_employee")
+```
+
+```{r, echo=FALSE}
+#Calculate for text here
+
+#Example:
+# Total number employed in district
+N_employ_total <- data_to_figure |> 
+  summarise(N = sum(n_employee)) |> 
+  mutate(N = format(N, 
+                    big.mark = ".", 
+                    decimal.mark = ",",
+                    scientific = FALSE)) |> 
+  pull(N) 
+
+N_female_total <- data_to_figure |> 
+  summarise(N = sum(n_female_employee)) |> 
+  mutate(N = format(N, 
+                    big.mark = ".", 
+                    decimal.mark = ",",
+                    scientific = FALSE)) |> 
+  pull(N)
+
+N_companies_total <- data_to_figure |> 
+  summarise(N = n()) |> 
+  mutate(N = format(N, 
+                    big.mark = ".", 
+                    decimal.mark = ",",
+                    scientific = FALSE)) |> 
+  pull(N)
+
+largest_industry1 <- data_1 |> 
+  filter(rank == 1) |>
+  mutate(sum_profit = format(sum_profit, 
+                             big.mark = ".", 
+                             decimal.mark = ",",
+                             scientific = FALSE))
+
+largest_industry2 <- data_1 |> 
+  filter(rank == 2) |>
+  mutate(sum_profit = format(sum_profit, 
+                             big.mark = ".", 
+                             decimal.mark = ",",
+                             scientific = FALSE))
+
+largest_industry3 <- data_1 |> 
+  filter(rank == 3)|>
+  mutate(sum_profit = format(sum_profit, 
+                             big.mark = ".", 
+                             decimal.mark = ",",
+                             scientific = FALSE))
+
+
+```
+
+\subsection{Introduction}
+This minireport provides an overview of the business climate for the district of`r params$district`. There are currently `r N_employ_total` people employed in the district, of these `r N_female_total` are women. 
+
+The three largest industries in `r params$district` district by profit are `r largest_industry1$Tên_sản_phẩm`, `r largest_industry2$Tên_sản_phẩm`, and `r largest_industry3$Tên_sản_phẩm`. The combined profit of companies in the largest industry, `r largest_industry1$Tên_sản_phẩm`, was `r largest_industry1$sum_profit` mil. VND. 
+
+```{r, echo=FALSE}
+#Calculate numbers for text before first plot
+
+# Calculate mean profit for companies
+profit_summary <- data_to_figure |> 
+  summarise(mean = mean(profit),
+            q1   = quantile(profit, 0.25),
+            q3   = quantile(profit, 0.75)) |> 
+  mutate(mean = format(mean, big.mark = ".", decimal.mark = ","),
+         q1 = format(q1, big.mark = ".", decimal.mark = ","),
+         q3 = format(q3, big.mark = ".", decimal.mark = ","))
+
+no_profit <- data_to_figure |> 
+  filter(profit <= 0) |> 
+  summarise(N = n()) |> 
+  pull(N)
+
+```
+
+\subsection{Profit before tax by industry}
+
+The companies of `r params$district` had an average profit of `r profit_summary$mean` VND. With a lower quartile of `r profit_summary$q1` VND and an upper quartile of `r profit_summary$q3` VND. Of the `r N_companies_total` companies in the province, `r no_profit` had no or negative profit. 
+
+
+```{r,warning=FALSE, results='asis', echo=FALSE, fig.height=4, fig.width=9}
+
+# Print figure 1
+ggplot(data = data_1) +
+  geom_col(aes(x = reorder(str_wrap(Tên_sản_phẩm, width=45), -rank),
+               y = sum_profit), 
+           position = "dodge", 
+           fill = "forestgreen") + #try looking here for color inspiration: https://www.nceas.ucsb.edu/sites/default/files/2020-04/colorPaletteCheatsheet.pdf
+  coord_flip() + #Flips x and y axis
+  theme_minimal() +#just one of many themes, try googling "ggplot themes"
+  xlab("Production Category") +
+  ylab("Total profit before tax") +
+  geom_text(mapping = aes(x = reorder(str_wrap(Tên_sản_phẩm, width=45), -rank),
+                          y = sum_profit,
+                          label = format(round(sum_profit, 0), big.mark = ".", decimal.mark = ".")),
+            position = position_dodge(width = 0),
+            hjust = "inward")
+
+```
+
+\vspace{0cm}
+\subsection{Employment}
+
+```{r, echo=FALSE}
+#calculate numbers for using in text before second plot
+production_by_employee <- data_to_figure |> 
+  filter(!is.na(Tên_sản_phẩm)) |> 
+  group_by(Tên_sản_phẩm) |> 
+  summarise(total = sum(n_employee)) |> 
+  mutate(rank = dense_rank(desc(total)))
+
+largest_employer1 = production_by_employee |> 
+  filter(rank == 1) |> 
+  mutate(total = format(total, 
+                        big.mark = ".", 
+                        decimal.mark = ",",
+                        scientific = FALSE))
+
+largest_employer2= production_by_employee |> 
+  filter(rank == 2) |> 
+  mutate(total = format(total, 
+                        big.mark = ".", 
+                        decimal.mark = ",",
+                        scientific = FALSE))
+
+largest_employer3 = production_by_employee |> 
+  filter(rank == 3) |> 
+  mutate(total = format(total, 
+                        big.mark = ".", 
+                        decimal.mark = ",",
+                        scientific = FALSE))
+
+top3_ratio = production_by_employee |> 
+  mutate(top3 = ifelse(rank <= 3, TRUE, FALSE)) |> 
+  group_by(top3) |> 
+  summarise(group_total = sum(total)) |> 
+  ungroup() |> 
+  mutate(share_employed = round((group_total / sum(group_total)) * 100, 1))
+
+```
+
+The largest employers by production category in `r params$district` are `r largest_employer1$Tên_sản_phẩm`, `r largest_employer2$Tên_sản_phẩm` and `r largest_employer3$Tên_sản_phẩm`. 
+
+
+
+```{r, warning=FALSE, results='asis', echo=FALSE, fig.height=5, fig.width=9}
+# Print figure 2
+# There are almost no observations that have unpaid employees, so we remove
+# these rows to avoid empty columns.
+data_2_paid <- data_2 |> 
+  filter(employee_type != "sum_nonpaid")
+
+ggplot(data = data_2_paid) +
+  geom_col(aes(x = reorder(str_wrap(Tên_sản_phẩm, width=45), -rank), 
+               y = n_employee, 
+               fill = employee_type),
+           position = "dodge") +
+  coord_flip() + 
+  theme_minimal() +
+  scale_fill_manual(values = c("#bef7ff", "#6db0ff", "#458cff"))+
+  labs(title = "Number of employees by type and production category",
+       fill = "Employee type") +
+  xlab("Production") +
+  ylab("Number of employees")
+```
+
+```{r, echo = FALSE, results = 'asis'}
+profit = 3000
+
+if(profit > 0){
+  sentence = str_c("The profit is ", profit, ".")
+} else{
+  sentence = str_c("The loses are ", profit, ".")
+}
+
+cat(sentence)
+
+```
+
+\subsection{Net Revenue of `r params$district` compared to other districts in province}
+```{r, echo = FALSE, results = 'asis'}
+
+# We need to adjust names to match names from map to the names in data
+matched_district_name = params$district |>
+  tolower() |> 
+  str_remove(" district") |> 
+  str_remove(" city") |> 
+  str_to_title()
+
+data_to_map = readRDS("./tidy_data/data_to_figure.rds") |> 
+  group_by(District_name) |> 
+  summarise(`Total Revenue` = sum(Net_rev / 1000000000),
+            .groups = "drop") |> 
+  mutate(new_name = tolower(District_name),
+         new_name = str_remove(new_name, " district"),
+         new_name = str_remove(new_name, " city"),
+         new_name = str_to_title(new_name)) |> 
+  select(-District_name)
+
+shp_in = read_sf(dsn = "./input/shape", layer = "vnm_admbnda_adm2_gov_20201027") |> 
+  mutate(ADM2_EN = ifelse(ADM2_EN == "Thong Nong", "Ha Quang", ADM2_EN)) |> 
+  group_by(ADM1_EN, ADM2_EN) |> 
+  summarise(geometry = st_union(geometry),
+            .groups = "drop") |> 
+  filter(ADM1_EN %in% c("Bac Kan", "Cao Bang", "Ha Giang"))
+
+match = shp_in |> 
+  left_join(data_to_map, join_by(ADM2_EN == new_name)) |> 
+  ms_simplify(keep = 0.6)
+
+current_province = match |> 
+  filter(ADM2_EN == matched_district_name) |> 
+  pull(ADM1_EN)
+
+province_to_map = match |> 
+  filter(ADM1_EN == current_province)
+
+district_to_highlight = match |> 
+  filter(ADM2_EN == matched_district_name)
+
+ggplot(data = province_to_map) +
+  geom_sf(aes(fill = `Total Revenue`), color = "white", lwd = 0.5) +
+  geom_sf(data = district_to_highlight, aes(color = ADM2_EN), fill = NA, lwd = 1) +
+  scale_fill_steps(n.breaks = 10) +
+  guides(color = "none") +
+  theme_void()
+```
+
+
