@@ -1,1 +1,2 @@
-this is a readme
+# Minireport
+This is an example of a setup used to generate parameterized 2-pager minireports. This example uses enterprise data (not provided) from various districts of Vietnam. The example includes the basics of using projects, tidying data, working in Rmarkdown and paramterizing the reports. There are also a few helper documents included, like the formatting documentation and the "Markdown vs LateX" comparison document. 
