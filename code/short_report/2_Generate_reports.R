@@ -23,7 +23,7 @@ for (i in list_of_districts$District_name){
   counter = counter + 1 
   
   # Render template file using current district as a paramter
-  rmarkdown::render(input = "./code/1_template_workshop.Rmd",
+  rmarkdown::render(input = "./code/short_report/1_template_workshop.Rmd",
                     params = list(district=i),
                     knit_root_dir = getwd(),
                     output_dir = output_path,
@@ -32,7 +32,7 @@ for (i in list_of_districts$District_name){
                     quiet = TRUE)
   
   # Delete log file
-  file.remove(str_c("./code/", i, ".log"))
+  file.remove(str_c("./code/short_report/", i, ".log"))
   
   cat("Finished printing report", counter, "of", nrow(list_of_districts))
   cat("\n")
